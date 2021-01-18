@@ -8,88 +8,107 @@ import {
   View,
   Button,
   Image,
+  Animated,
 } from "react-native";
-import {
-  createSharedElementStackNavigator,
-  SharedElement,
-} from "react-navigation-shared-element";
-
-import { enableScreens } from "react-native-screens";
-import { NavigationContainer } from "@react-navigation/native";
-import { TouchableWithoutFeedback } from "react-native-gesture-handler";
-enableScreens();
-
-const List = ({ navigation }) => (
-  <TouchableWithoutFeedback onPress={() => navigation.navigate("Details")}>
-    <View style={{ marginTop: 100 }}>
-      <SharedElement id={1}>
-        <Image
-          source={require("./app/assets/gal-1-crop.jpg")}
-          style={{ width: "100%", height: 300, resizeMode: "contain" }}
-        />
-      </SharedElement>
-    </View>
-  </TouchableWithoutFeedback>
-);
-
-const Details = () => (
-  <View style={{ flex: 1, justifyContent: "center" }}>
-    <SharedElement id={1}>
-      <Image
-        source={require("./app/assets/gal-1-crop.jpg")}
-        style={{
-          width: "90%",
-          height: "90%",
-          alignSelf: "center",
-          resizeMode: "contain",
-        }}
-      />
-    </SharedElement>
-  </View>
-);
-
-const Stack = createSharedElementStackNavigator();
-const StackNavigator = () => (
-  <Stack.Navigator headerMode="none">
-    <Stack.Screen name="list" component={List} />
-    <Stack.Screen
-      name="Details"
-      component={Details}
-      sharedElementsConfig={(route, otherRoute, showing) => {
-        return [
-          {
-            id: 1,
-            animation: "fade",
-          },
-        ];
-      }}
-      options={() => ({
-        gestureEnabled: false,
-        transitionSpec: {
-          open: { animation: "timing", config: { duration: 1000 } },
-          close: { animation: "timing", config: { duration: 1000 } },
-        },
-        cardStyleInterpolator: ({ current: { progress } }) => {
-          return {
-            cardStyle: {
-              opacity: progress,
-            },
-          };
-        },
-      })}
-    />
-  </Stack.Navigator>
-);
+import { FlatList } from "react-native-gesture-handler";
+import ShowNumberScreen from "./app/screens/ShowNumberScreen";
+const DATA = [
+  { id: 1, title: "first item" },
+  { id: 2, title: "second item" },
+  { id: 3, title: "third item" },
+  { id: 4, title: "fourth item" },
+  { id: 5, title: "fifth item" },
+  { id: 6, title: "sixth item" },
+  { id: 7, title: "seventh item" },
+];
 
 export default function App() {
+  const [index, setIndex] = useState(0);
+  const scaleIndex = useRef(new Animated.Value(0)).current;
+  const scaleAnimation = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.spring(scaleAnimation, {
+      toValue: scaleIndex,
+      useNativeDriver: true,
+    }).start();
+  });
   return (
-    <NavigationContainer>
-      <StackNavigator />
-    </NavigationContainer>
+    <>
+      <View style={styles.container}>
+        <View style={{ backgroundColor: "blue", width: 300 }} />
+        <FlatList
+          CellRendererComponent={({
+            item,
+            index,
+            children,
+            style,
+            ...otherProps
+          }) => {
+            return (
+              <View index={index} style={style} {...otherProps}>
+                {children}
+              </View>
+            );
+          }}
+          horizontal
+          data={DATA}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+          renderItem={({ item, index }) => {
+            const inputRange = [index - 1, index, index + 1];
+            const scale = scaleAnimation.interpolate({
+              inputRange,
+              outputRange: [0.8, 1.5, 0.8],
+              extrapolate: "clamp",
+            });
+            const opacity = scaleAnimation.interpolate({
+              inputRange,
+              outputRange: [0.8, 1, 0.8],
+            });
+
+            return (
+              <Animated.View
+                key={item.id}
+                style={{
+                  // backgroundColor: "white",
+                  padding: 10,
+                  borderWidth: 2,
+                  borderColor: "#0c0c0c",
+                  transform: [{ scale }],
+                  opacity,
+                }}
+              >
+                <Animated.Text
+                  style={{ fontSize: 30, color: "#0c0c0c", elevation: 2 }}
+                >
+                  {item.id}
+                </Animated.Text>
+              </Animated.View>
+            );
+          }}
+        />
+      </View>
+      <Button
+        title="click"
+        onPress={() => {
+          setIndex(index + 1),
+            scaleIndex.setValue(index + 1),
+            console.log("press");
+        }}
+      />
+    </>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    // backgroundColor: "#0c0c0c",
+    backgroundColor: "white",
   },
 });
