@@ -47,10 +47,6 @@ const Details = () => (
     </SharedElement>
   </View>
 );
-// Details.sharedElements = (route, otherRoute, showing) => {
-//   // const { item } = route.params;
-//   return [{ id: 1, animation: "fade", resize: "clip" }];
-// };
 
 const Stack = createSharedElementStackNavigator();
 const StackNavigator = () => (
